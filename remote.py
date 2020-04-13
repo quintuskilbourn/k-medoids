@@ -1,12 +1,13 @@
 import medoid_multiq as mq
 import networkx as nx
 import pickle
+import datetime
 res = []
-for p in [0.01,0.3,0.5,0.7]:
-    for n in [150,200,250]:
+for p in [0.3]:
+    for n in [300,25,50,75,100,125,150,175,200,250,275]:
         G = nx.watts_strogatz_graph(n,6,p)
         test = mq.Kmed(G,3)
-        res.append(((p,n),test.find_central_supernode()))
+        res.append((p,test.find_central_supernode()))
 
-with open("result.pkl",'wb') as f:
+with open("watts_"+str(datetime.datetime.now())+".pkl",'wb') as f:
     pickle.dump(res,f)

@@ -8,7 +8,7 @@ for p in [0.3]:#[0.3,0.3,0.7,0.7,0.7]:
         G = nx.watts_strogatz_graph(n,6,p)
         test = mq.Kmed(G,3)
         res.append((p,test.find_central_supernode()))
-		print(n)
+        print(n)
 
 with open("watts_"+str(datetime.datetime.now())+".pkl",'wb') as f:
     pickle.dump(res,f)

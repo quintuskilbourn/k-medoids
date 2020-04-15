@@ -11,5 +11,5 @@ for k in [3,4]:
 	        res.append((p,test.find_central_supernode()))
 	        print(n)
 
-with open("watts_"+str(datetime.datetime.now())+".pkl",'wb') as f:
+with open("watts_"+str(int(datetime.datetime.now().timestamp()))+".pkl",'wb') as f:
     pickle.dump(res,f)

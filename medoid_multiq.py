@@ -6,6 +6,7 @@ import timeit
 import math
 import random
 import numpy as np
+import operator
 
 class Kmed:
     def __init__(self,G,k):
@@ -14,18 +15,59 @@ class Kmed:
         self.lQ = PQ()
         self.G = G
         self.k=k
+        self.dist = dict(nx.all_pairs_shortest_path_length(G))
+
 
     def density_edges(self,V,d):
         '''
         For creating number of edges based on density calculation
         '''
         return round((d/2)*(V*(V-1)))
+    
+    def makeClusters(self,medoids):
+        '''
+        forms clusters around medoids
+        '''
+        clusters = {med:[] for med in medoids}
+        for n in self.G.nodes:
+            clusters[min(medoids, key=lambda x:self.dist[n][x])].append(n)
+        return clusters
+
+    def find_medoid(self,nodes):
+        '''
+        finds medoid given subset of nodes
+        '''
+        return min(nodes, key=lambda n: sum(self.dist[n][u] for u in nodes))
+
+    def p_j(self):
+        '''
+        Algorithm in Park and Jun paper
+        '''
+        G = self.G
+        k = self.k
+        starttime = timeit.default_timer()
+        v = {}
+        for n in G.nodes:
+            v[n] = sum(self.dist[n][i]/sum(self.dist[i][j] for j in G.nodes) for i in G.nodes)
+        medoids = [x[0] for x in sorted(v.items(), key=operator.itemgetter(1))[:k]]
+        while(1):
+            clusters = self.makeClusters(G,medoids)
+            new_medoids = [self.find_medoid(clusters[med]) for med in medoids]
+            print(new_medoids)
+            if new_medoids == medoids:
+                break
+            medoids=new_medoids
+        self.PJ_medoids = medoids
+        self.PJ_centrality = self.distance_centrality(medoids)
+        return timeit.default_timer()-starttime
+
+            
 
     def LAB(self):
         TD=math.inf
         m=['']*self.k
         samp = random.sample(self.G.nodes,10+int(np.log(len(self.G))))
-        dist = dict(nx.all_pairs_shortest_path_length(self.G))
+        dist = self.dist
         for x in samp:
             TDj=0
             for y in samp:
@@ -51,7 +93,7 @@ class Kmed:
                     xi=x
             TD+=dTD
             m[i] = xi
-        return TD,tuple(m),dist
+        return TD,tuple(m)
 
     def FASTPAM2(self,m,TD):
         dist=self.dist
@@ -216,8 +258,11 @@ class Kmed:
         return centrality, timeit.default_timer()-starttime
 
     def FP2(self):
+        '''
+        container function which runs the fastPAM2 algos
+        '''
         starttime = timeit.default_timer()
-        TD,m,self.dist = self.LAB()
+        TD,m = self.LAB()
         self.lowest_centrality=math.inf
         lowest_centrality = self.distance_centrality(m)[0]
         self.lowest_centrality,self.lowest_supernode = self.FASTPAM2(list(m),lowest_centrality)
@@ -228,6 +273,7 @@ class Kmed:
     def find_central_supernode(self):#use different queues so we dont have to hold extra int
         starttime = timeit.default_timer()
         FP2_time = self.FP2()
+        PJ_time = self.p_j()
         nlvl,bfs_time = self.calc_bfs(0)
         lbound_time = self.calc_level_bound(nlvl)
         dbound_time = 0
@@ -242,13 +288,17 @@ class Kmed:
                             'Opt_set':self.lowest_supernode,
                             'FP2_val':self.approx[0],
                             'FP2_set':self.approx[1],
-                            'k':self.k,'V':len(self.G),
+                            'PJ_val':self.PJ_centrality,
+                            'PJ_set':self.PJ_medoids,
+                            'k':self.k,
+                            'V':len(self.G),
                             'E':self.G.size(),
                             'nlvls':{dist:len(nodes) for dist,nodes in nlvl.items()},
                             'bfs':bfs_time,
                             'lbound_time':lbound_time,
                             'dbound_time':dbound_time,
                             'FP2_time':FP2_time,
+                            'PJ_time':PJ_time,
                             'opt':opt_time,
                             'total':timeit.default_timer()-starttime,
                             'dbound runs':dbound_runs,

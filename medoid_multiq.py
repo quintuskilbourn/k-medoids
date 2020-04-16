@@ -51,9 +51,8 @@ class Kmed:
             v[n] = sum(self.dist[n][i]/sum(self.dist[i][j] for j in G.nodes) for i in G.nodes)
         medoids = [x[0] for x in sorted(v.items(), key=operator.itemgetter(1))[:k]]
         while(1):
-            clusters = self.makeClusters(G,medoids)
+            clusters = self.makeClusters(medoids)
             new_medoids = [self.find_medoid(clusters[med]) for med in medoids]
-            print(new_medoids)
             if new_medoids == medoids:
                 break
             medoids=new_medoids

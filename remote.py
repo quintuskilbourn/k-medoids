@@ -3,6 +3,7 @@ import networkx as nx
 import pickle
 import datetime
 res = []
+file = "watts_"+str(int(datetime.datetime.now().timestamp()))+".pkl"
 for k in [2,3]:#4
 	for p in [0.03]:#[0.3,0.3,0.7,0.7,0.7]:
 	    for n in [25,50,75,100,125,150,175,200,225,250]: #[275,300]
@@ -10,5 +11,5 @@ for k in [2,3]:#4
 	        test = mq.Kmed(G,k)
 	        res.append((p,test.find_central_supernode()))
 	        print(n)
-	        with open("watts_"+str(int(datetime.datetime.now().timestamp()))+".pkl",'wb') as f:
+	        with open(file,'wb') as f:
 	            pickle.dump(res,f)

@@ -16,6 +16,7 @@ class Kmed:
         self.G = G
         self.k=k
         self.dist = dict(nx.all_pairs_shortest_path_length(G))
+        self.lowest_centrality = math.inf
 
 
     def density_edges(self,V,d):
@@ -57,7 +58,7 @@ class Kmed:
                 break
             medoids=new_medoids
         self.PJ_medoids = medoids
-        self.PJ_centrality = self.distance_centrality(medoids)
+        self.PJ_centrality = self.distance_centrality(medoids)[0]
         return timeit.default_timer()-starttime
 
             
@@ -262,7 +263,6 @@ class Kmed:
         '''
         starttime = timeit.default_timer()
         TD,m = self.LAB()
-        self.lowest_centrality=math.inf
         lowest_centrality = self.distance_centrality(m)[0]
         self.lowest_centrality,self.lowest_supernode = self.FASTPAM2(list(m),lowest_centrality)
         self.approx = (self.lowest_centrality,self.lowest_supernode)
@@ -271,8 +271,8 @@ class Kmed:
 
     def find_central_supernode(self):#use different queues so we dont have to hold extra int
         starttime = timeit.default_timer()
-        FP2_time = self.FP2()
         PJ_time = self.p_j()
+        FP2_time = self.FP2()
         nlvl,bfs_time = self.calc_bfs(0)
         lbound_time = self.calc_level_bound(nlvl)
         dbound_time = 0

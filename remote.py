@@ -1,4 +1,4 @@
-import medoid_multiq as mq
+import mid as mq
 import networkx as nx
 import pickle
 import datetime

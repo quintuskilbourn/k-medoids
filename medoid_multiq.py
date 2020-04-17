@@ -85,8 +85,8 @@ class Kmed:
                 for y in samp:
                     if y==x:
                         continue
-                    d = dist[x][y]-min([dist[mi][y] for mi in m if mi])
-                    if d>0:
+                    d = dist[x][y]-min([dist[mi][y] for mi in m if mi!=''])
+                    if d<0:
                         TDj+=d
                 if TDj<dTD:
                     dTD=TDj

@@ -310,7 +310,6 @@ class Kmed:
         '''
         starttime = timeit.default_timer()
         TD,m = self.LAB()
-        print(TD,m)
         lowest_centrality = self.distance_centrality(m)[0]
         self.lowest_centrality,self.lowest_supernode = self.FASTPAM2(list(m),lowest_centrality)
         self.approx = (self.lowest_centrality,self.lowest_supernode)
@@ -322,7 +321,6 @@ class Kmed:
         '''
         starttime = timeit.default_timer()
         TD,m = self.LAB_mid()
-        print(TD,m)
         lowest_centrality = self.distance_centrality_no_thresh(m)[0]
         self.approx_mid = self.FASTPAM2(list(m),lowest_centrality)
         return timeit.default_timer()-starttime

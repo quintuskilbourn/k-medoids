@@ -83,7 +83,6 @@ class Kmed:
             if TDj<TD:
                 TD = TDj
                 m[0] = x
-        print("centre: ",m[0])
         for i in range(1,self.k):
             dTD = math.inf
             for x in self.G.nodes:
@@ -159,7 +158,6 @@ class Kmed:
                 break
             mini = min(TDres)
             while mini<0:
-                print(m)
                 i = TDres.index(mini)
                 m[i]=x[i]
                 TD += mini
@@ -174,7 +172,6 @@ class Kmed:
                             else:
                                 TDres[j]+=min(dist[x[j]][n]-nearest[n][0][0],0)
                 mini = min(TDres)
-        print(m)
         return TD,tuple(m)
 
     def calc_bfs(self,start):
@@ -313,7 +310,6 @@ class Kmed:
         '''
         starttime = timeit.default_timer()
         TD,m = self.LAB()
-        print(TD,m)
         lowest_centrality = self.distance_centrality(m)[0]
         self.lowest_centrality,self.lowest_supernode = self.FASTPAM2(list(m),lowest_centrality)
         self.approx = (self.lowest_centrality,self.lowest_supernode)
@@ -325,7 +321,6 @@ class Kmed:
         '''
         starttime = timeit.default_timer()
         TD,m = self.BUILD_mid()
-        print(TD,m)
         lowest_centrality = self.distance_centrality_no_thresh(m)[0]
         self.approx_mid = self.FASTPAM2(list(m),lowest_centrality)
         return timeit.default_timer()-starttime
@@ -336,7 +331,6 @@ class Kmed:
         '''
         starttime = timeit.default_timer()
         TD,m = self.BUILD()
-        print(TD,m)
         lowest_centrality = self.distance_centrality_no_thresh(m)[0]
         self.approx_BUILD = self.FASTPAM2(list(m),lowest_centrality)
         return timeit.default_timer()-starttime

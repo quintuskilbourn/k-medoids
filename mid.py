@@ -73,11 +73,10 @@ class Kmed:
     def BUILD(self):
         TD=math.inf
         m=['']*self.k
-        samp = G.nodes
         dist = self.dist
-        for x in samp:
+        for x in self.G.nodes:
             TDj=0
-            for y in samp:
+            for y in self.G.nodes:
                 if y==x:
                     continue
                 TDj+=dist[x][y]
@@ -87,10 +86,9 @@ class Kmed:
         print("centre: ",m[0])
         for i in range(1,self.k):
             dTD = math.inf
-            samp = G.nodes
-            for x in samp:
+            for x in self.G.nodes:
                 TDj=0
-                for y in samp:
+                for y in self.G.nodes:
                     if y==x:
                         continue
                     d = dist[x][y]-min([dist[mi][y] for mi in m if mi!=''])

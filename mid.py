@@ -24,7 +24,7 @@ class Kmed:
         For creating number of edges based on density calculation
         '''
         return round((d/2)*(V*(V-1)))
-
+    
     def makeClusters(self,medoids):
         '''
         forms clusters around medoids
@@ -61,13 +61,19 @@ class Kmed:
         self.PJ_centrality = self.distance_centrality(medoids)[0]
         return timeit.default_timer()-starttime
 
+            
 
-
-    def LAB_mid(self):
+    def BUILD_mid(self):
+        centre = min([(key,sum(val.values())) for key,val in self.dist.items()],key=operator.itemgetter(1))
+        m = [centre[0]] * self.k
+        TD = centre[1]
+        return TD,tuple(m)
+    
+    
+    def BUILD(self):
         TD=math.inf
         m=['']*self.k
-        samp = random.sample(self.G.nodes,10+int(np.log(len(self.G))))
-#         samp = G.nodes()
+        samp = G.nodes
         dist = self.dist
         for x in samp:
             TDj=0
@@ -78,17 +84,17 @@ class Kmed:
             if TDj<TD:
                 TD = TDj
                 m[0] = x
+        print("centre: ",m[0])
         for i in range(1,self.k):
             dTD = math.inf
-            samp = random.sample(set(self.G.nodes)-set(m),10+int(np.log(len(self.G))))
-#             samp = G.nodes
+            samp = G.nodes
             for x in samp:
                 TDj=0
                 for y in samp:
                     if y==x:
                         continue
                     d = dist[x][y]-min([dist[mi][y] for mi in m if mi!=''])
-                    if d>0:
+                    if d<0:
                         TDj+=d
                 if TDj<dTD:
                     dTD=TDj
@@ -96,13 +102,11 @@ class Kmed:
             TD+=dTD
             m[i] = xi
         return TD,tuple(m)
-
-
+    
     def LAB(self):
         TD=math.inf
         m=['']*self.k
         samp = random.sample(self.G.nodes,10+int(np.log(len(self.G))))
-#         samp = G.nodes
         dist = self.dist
         for x in samp:
             TDj=0
@@ -116,7 +120,6 @@ class Kmed:
         for i in range(1,self.k):
             dTD = math.inf
             samp = random.sample(set(self.G.nodes)-set(m),10+int(np.log(len(self.G))))
-#             samp = G.nodes
             for x in samp:
                 TDj=0
                 for y in samp:
@@ -158,6 +161,7 @@ class Kmed:
                 break
             mini = min(TDres)
             while mini<0:
+                print(m)
                 i = TDres.index(mini)
                 m[i]=x[i]
                 TD += mini
@@ -172,6 +176,7 @@ class Kmed:
                             else:
                                 TDres[j]+=min(dist[x[j]][n]-nearest[n][0][0],0)
                 mini = min(TDres)
+        print(m)
         return TD,tuple(m)
 
     def calc_bfs(self,start):
@@ -248,7 +253,7 @@ class Kmed:
             S[0]+=1
         return timeit.default_timer()-starttime
 
-
+    
     def db_v2(self,S,lvln,lvlBound): #needs some testing and comments
         Q = self.dbQ
         starttime = timeit.default_timer()
@@ -260,7 +265,7 @@ class Kmed:
         for supr in superQ:
             supr[1] -= self.G.degree[supr[0][0]]
         degDict = {node:self.G.degree[node] for i in range(len(S[1:-1])) for node in lvln[S[i+1]]}
-        for i in range(len(S[1:-1])):
+        for i in range(len(S[1:-1])):      
             mNext = (S[i+1]+S[i+2])//2 + 1  #we use m as a way to prevent calculating the same level more than once.
             bound = 0
             for lvl in range(max(m,S[i+1]-1),min(S[i+1]+2,mNext)):
@@ -281,7 +286,7 @@ class Kmed:
                 Q.add_task(S,bound)
         return timeit.default_timer() - starttime,cnt
 
-
+    
     def distance_centrality(self,S):
         '''
         Exact calculation of supernode total distance
@@ -303,26 +308,39 @@ class Kmed:
         for n in self.G.nodes:
             centrality+=min(self.dist[n][s] for s in S)
         return centrality, timeit.default_timer()-starttime
-
+    
     def FP2(self):
         '''
         container function which runs the fastPAM2 algos
         '''
         starttime = timeit.default_timer()
         TD,m = self.LAB()
+        print(TD,m)
         lowest_centrality = self.distance_centrality(m)[0]
         self.lowest_centrality,self.lowest_supernode = self.FASTPAM2(list(m),lowest_centrality)
         self.approx = (self.lowest_centrality,self.lowest_supernode)
         return timeit.default_timer()-starttime
-
+    
     def FP2_mid(self):
         '''
         container function which runs the fastPAM2 algos
         '''
         starttime = timeit.default_timer()
-        TD,m = self.LAB_mid()
+        TD,m = self.BUILD_mid()
+        print(TD,m)
         lowest_centrality = self.distance_centrality_no_thresh(m)[0]
         self.approx_mid = self.FASTPAM2(list(m),lowest_centrality)
+        return timeit.default_timer()-starttime
+    
+    def FP2_BUILD(self):
+        '''
+        container function which runs the fastPAM2 algos
+        '''
+        starttime = timeit.default_timer()
+        TD,m = self.BUILD()
+        print(TD,m)
+        lowest_centrality = self.distance_centrality_no_thresh(m)[0]
+        self.approx_BUILD = self.FASTPAM2(list(m),lowest_centrality)
         return timeit.default_timer()-starttime
 
 
@@ -331,6 +349,7 @@ class Kmed:
         PJ_time = self.p_j()
         FP2_time = self.FP2()
         FP2_mid_time = self.FP2_mid()
+        FP2_BUILD_time = self.FP2_BUILD()
         nlvl,bfs_time = self.calc_bfs(0)
         lbound_time = self.calc_level_bound(nlvl)
         dbound_time = 0
@@ -341,7 +360,7 @@ class Kmed:
         while 1:
             if self.lowest_centrality<=self.dbQ.front()[0]:
                 if self.lowest_centrality<=self.lQ.front()[0]:
-                    return {'Mid_val':self.approx_mid[0],
+                    return {'Mid_val':self.distance_centrality_no_thresh(self.approx_mid[1])[0],
                             'Mid_set':self.approx_mid[1],
                             'Opt_val':self.lowest_centrality,
                             'Opt_set':self.lowest_supernode,
@@ -349,6 +368,8 @@ class Kmed:
                             'FP2_set':self.approx[1],
                             'PJ_val':self.PJ_centrality,
                             'PJ_set':self.PJ_medoids,
+                            'Build_val':self.distance_centrality_no_thresh(self.approx_BUILD[1])[0],
+                            'Build_set':self.approx_BUILD[1],
                             'k':self.k,
                             'V':len(self.G),
                             'E':self.G.size(),
@@ -359,6 +380,7 @@ class Kmed:
                             'FP2_time':FP2_time,
                             'PJ_time':PJ_time,
                             'Mid_time':FP2_mid_time,
+                            'BUILD_time':FP2_BUILD_time,
                             'opt':opt_time,
                             'total':timeit.default_timer()-starttime,
                             'dbound runs':dbound_runs,
@@ -379,12 +401,12 @@ class Kmed:
                 opt_runs+=1
                 opt = self.distance_centrality(supr)
                 opt_time+= opt[1]
-
+                
                 #new best
                 if opt[0]:
                     self.lowest_centrality = opt[0]
                     self.lowest_supernode = supr
-
+            
             else:
                 supr,bound = self.lQ.pop_task()
                 dbound_runs +=1

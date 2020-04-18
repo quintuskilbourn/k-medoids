@@ -315,6 +315,16 @@ class Kmed:
         self.approx = (self.lowest_centrality,self.lowest_supernode)
         return timeit.default_timer()-starttime
     
+    def FP2_2(self):
+        '''
+        container function which runs the fastPAM2 algos
+        '''
+        starttime = timeit.default_timer()
+        TD,m = self.LAB()
+        lowest_centrality = self.distance_centrality_no_thresh(m)[0]
+        self.approx_2 = self.FASTPAM2(list(m),lowest_centrality)
+        return timeit.default_timer()-starttime
+    
     def FP2_mid(self):
         '''
         container function which runs the fastPAM2 algos
@@ -340,6 +350,7 @@ class Kmed:
         starttime = timeit.default_timer()
         PJ_time = self.p_j()
         FP2_time = self.FP2()
+        FP2_2_time = self.FP2_2()
         FP2_mid_time = self.FP2_mid()
         FP2_BUILD_time = self.FP2_BUILD()
         nlvl,bfs_time = self.calc_bfs(0)
@@ -358,6 +369,8 @@ class Kmed:
                             'Opt_set':self.lowest_supernode,
                             'FP2_val':self.approx[0],
                             'FP2_set':self.approx[1],
+                            'FP2_val':self.approx_2[0],
+                            'FP2_set':self.approx_2[1],
                             'PJ_val':self.PJ_centrality,
                             'PJ_set':self.PJ_medoids,
                             'Build_val':self.distance_centrality_no_thresh(self.approx_BUILD[1])[0],
@@ -370,6 +383,7 @@ class Kmed:
                             'lbound_time':lbound_time,
                             'dbound_time':dbound_time,
                             'FP2_time':FP2_time,
+                            'FP2_2_time':FP2_2_time,
                             'PJ_time':PJ_time,
                             'Mid_time':FP2_mid_time,
                             'BUILD_time':FP2_BUILD_time,

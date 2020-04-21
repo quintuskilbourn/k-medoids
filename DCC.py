@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import itertools
 import networkx as nx
 import itertools
@@ -17,16 +11,11 @@ import operator
 class Kmed:
     def __init__(self,G,k):
         self.dbQ = PQ()
-#         self.optQ = PQ()
         self.lQ = PQ()
         self.G = G
         self.k=k
         self.dist = dict(nx.all_pairs_shortest_path_length(G))
         self.lowest_centrality = math.inf
-        # self.seen_opt = []
-        # self.seen_lvls = []
-        # self.seen_d = []
-
 
 
     def density_edges(self,V,d):
@@ -73,6 +62,9 @@ class Kmed:
     
     
     def BUILD(self):
+        '''
+        initialisation for fastPAM2 with no sampling
+        '''
         TD=math.inf
         m=['']*self.k
         dist = self.dist
@@ -103,6 +95,9 @@ class Kmed:
         return TD,tuple(m)
     
     def LAB(self):
+        '''
+        initialisation of fastPAM2 with sampling
+        '''
         TD=math.inf
         m=['']*self.k
         samp = random.sample(self.G.nodes,10+int(np.log(len(self.G))))
@@ -233,10 +228,6 @@ class Kmed:
                         memo[(S[k-1],-1)] = count
                         bound += count
                     bound -= (len(S)-1)   #counted source nodes as 1 when should be 0, excluding 'F' entry for final segment
-#                     print(S)
-#                     if set(S) in self.seen_lvls:
-#                         print("levles fuck!!!, ", S)
-#                     self.seen_lvls.append(set(S))
                     if bound<self.lowest_centrality:
                         Q.add_task(tuple(S[:-1]),bound)  #add zero to denote level bound
 
@@ -281,7 +272,6 @@ class Kmed:
                 reps+=1
                 i+=1
             if reps:
-#                 i-=1
                 combs = itertools.combinations(lvln[S[i]], reps+1)
                 reps = 0
                 if superQ:
@@ -297,11 +287,7 @@ class Kmed:
             i+=1
         cnt = 0
         enQ = list(map(lambda s: [s,bound-sum(degDict[n] for n in s)],superQ))
-        # print(list(enQ))
         for S, bound in enQ:
-            # if set(S) in self.seen_d:
-            #     print(rem,S,"!!!")
-            # self.seen_d.append(set(S))
             cnt+=1
             if bound<self.lowest_centrality:
                 Q.add_task(S,bound)
@@ -314,9 +300,6 @@ class Kmed:
         '''
         starttime = timeit.default_timer() #for testing purposes
         centrality=0
-        # if set(S) in self.seen_opt:
-        #     print("HOLY FUCK FCK FUCK ",S)
-        # self.seen_opt.append(set(S))
         for n in self.G.nodes:
             centrality+=min(self.dist[n][s] for s in S)
             if centrality>=self.lowest_centrality:
@@ -329,9 +312,6 @@ class Kmed:
         '''
         starttime = timeit.default_timer() #for testing purposes
         centrality=0
-        # if set(S) in self.seen_opt:
-        #     print("HOLY FUCK FCK FUCK ",S)
-        # self.seen_opt.append(set(S))
         for n in self.G.nodes:
             centrality+=min(self.dist[n][s] for s in S)
         return centrality, timeit.default_timer()-starttime
@@ -368,7 +348,10 @@ class Kmed:
         return timeit.default_timer()-starttime
 
 
-    def find_central_supernode(self):#use different queues so we dont have to hold extra int
+    def find_central_supernode(self):
+        '''
+        overall algorithm for finding optimum set
+        '''
         starttime = timeit.default_timer()
         PJ_time = self.p_j()
         FP2_time = self.FP2()
@@ -439,29 +422,20 @@ class Kmed:
                 dbound_tups+=db[1]
 
 
+#heapq implementation of priority queue
 class PQ:
     def __init__(self, ls=[]):
-        self.pq = []                         # list of entries arranged in a heap
-#         self.entry_finder = {}               # mapping of tasks to entries
-#         self.REMOVED = '<removed-task>'      # placeholder for a removed task
-        self.counter = itertools.count()     # unique sequence count
+        self.pq = []
         if ls:
             for i in ls:
                 self.add_task(i[0],i[1])
 
     def add_task(self,task, priority=0):
         'Add a new task or update the priority of an existing task'
-#         if task in self.entry_finder:
-#             self.remove_task(task)
-        next(self.counter) #         count = next(self.counter)
+        next(self.counter) #       
         entry = [priority, task]
-#         self.entry_finder[task] = entry
-        hq.heappush(self.pq, entry)
 
-#     def remove_task(self,task):
-#         'Mark an existing task as REMOVED.  Raise KeyError if not found.'
-#         entry = self.entry_finder.pop(task)
-#         entry[-1] = self.REMOVED
+        hq.heappush(self.pq, entry)
 
     def front(self):
         try:
@@ -473,8 +447,6 @@ class PQ:
         'Remove and return the lowest priority task. Raise KeyError if empty.'
         while self.pq:
             priority, task = hq.heappop(self.pq)
-#             if task is not self.REMOVED:
-#                 del self.entry_finder[task]
             return task,priority
         raise KeyError('pop from an empty priority queue')
 

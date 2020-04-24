@@ -426,6 +426,7 @@ class Kmed:
 class PQ:
     def __init__(self, ls=[]):
         self.pq = []
+        self.counter = itertools.count()     # unique sequence count
         if ls:
             for i in ls:
                 self.add_task(i[0],i[1])
